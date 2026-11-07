@@ -3,7 +3,7 @@ import Button from './Button.jsx'
 import MovieCard from './MovieCard.jsx'
 import MovieSearch from './MovieSearch.jsx'
 
-function MovieList({ movies, onBuy, favorites, onToggleFavorite, query, onQueryChange, debouncedQuery }) {
+function MovieList({ movies, onBuy, favorites, onToggleFavorite, query, onQueryChange, debouncedQuery, cols }) {
   const [classification, setClassification] = useState('Todas')
 
   const classifications = ['Todas', ...new Set(movies.map((movie) => movie.classification))]
@@ -50,7 +50,7 @@ function MovieList({ movies, onBuy, favorites, onToggleFavorite, query, onQueryC
               : 'No se encontraron películas con esos criterios.'}
           </p>
         ) : (
-          <ul className="movie-list__grid" role="list" aria-label="Películas en cartelera">
+          <ul className={`movie-list__grid movie-grid--${cols}`} role="list" aria-label="Películas en cartelera">
             {filtered.map((movie) => (
               <li key={movie.id} className="movie-list__item">
                 <MovieCard

@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react'
+import { useDebounce } from './hooks/useDebounce'
+import { useWindowSize } from './hooks/useWindowSize'
+import { usePremieres } from './hooks/usePremieres'
 import Header from './components/Header.jsx'
 import Hero from './components/Hero.jsx'
 import MovieList from './components/MovieList.jsx'
@@ -17,11 +20,14 @@ function App() {
       return []
     }
   })
+  const [favoritesCount, setFavoritesCount] = useState(favorites.length)
   const [favNotification, setFavNotification] = useState({
     message: '',
     type: 'success'
   })
   const [query, setQuery] = useState('')
+  const { width } = useWindowSize()
+  const cols = width > 1200 ? 3 : width > 768 ? 2 : 1
   const featured = adaptMovie(movies[0])
 
   const adaptedMovies = movies.map(adaptMovie)
@@ -34,6 +40,7 @@ function App() {
     setFavorites((prev) =>
       prev.includes(movieId) ? prev.filter((id) => id !== movieId) : [...prev, movieId]
     )
+    setFavoritesCount(favorites.length + (prev.includes(movieId) ? -1 : 1))
     setFavNotification({
       message: prev.includes(movieId) ? 'Quita de favoritas' : 'Película añadida a favoritas',
       type: 'success'
@@ -45,6 +52,8 @@ function App() {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites))
   }, [favorites])
 
+  const { state, data, error } = usePremieres()
+
   const debouncedQuery = useDebounce(query, 300)
 
   const handleQueryChange = (value) => {
@@ -54,7 +63,7 @@ function App() {
 
   return (
     <>
-      <Header tickets={tickets} />
+      <Header tickets={tickets} favoritesCount={favoritesCount} />
       <main>
         <Hero movie={featured} query={query} onQueryChange={handleQueryChange} />
         <MovieList

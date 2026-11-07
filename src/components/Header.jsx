@@ -1,4 +1,4 @@
-function Header({ tickets }) {
+function Header({ tickets, favoritesCount }) {
   return (
     <header className="header">
       <div className="container">
@@ -14,6 +14,10 @@ function Header({ tickets }) {
           <div className="header__tickets" aria-live="polite">
             <span aria-hidden="true">🎟️</span>
             <span>{tickets} {tickets === 1 ? 'entrada' : 'entradas'}</span>
+          </div>
+          <div className="header__favorites" aria-live="polite">
+            <span aria-hidden="true">❤️</span>
+            <span>{favoritesCount} {favoritesCount === 1 ? 'favorita' : 'favoritas'}</span>
           </div>
         </div>
       </div>

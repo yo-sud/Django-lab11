@@ -19,7 +19,9 @@ function App() {
   })
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
-  const featured = movies[0]
+  const featured = adaptMovie(movies[0])
+
+  const adaptedMovies = movies.map(adaptMovie)
 
   const handleBuy = () => {
     setTickets((prev) => prev + 1)

@@ -22,6 +22,16 @@ function Hero({ movie, query, onQueryChange }) {
             placeholder="Buscar en la cartelera..."
             label="Buscar películas desde el banner"
           />
+          {query && (
+            <>
+              <button
+                className="btn btn--ghost hero__clear-filter"
+                onClick={() => onQueryChange('')}
+              >
+                Limpiar filtro
+              </button>
+            </>
+          )}
           <a href="#cartelera" className="btn btn--primary hero__cta">Ver cartelera</a>
         </div>
       </div>

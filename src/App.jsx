@@ -22,7 +22,6 @@ function App() {
     type: 'success'
   })
   const [query, setQuery] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState('')
   const featured = adaptMovie(movies[0])
 
   const adaptedMovies = movies.map(adaptMovie)
@@ -46,13 +45,7 @@ function App() {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites))
   }, [favorites])
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log('[filtro]', query)
-      setDebouncedQuery(query)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [query])
+  const debouncedQuery = useDebounce(query, 300)
 
   const handleQueryChange = (value) => {
     console.log('[tecleo]', value)

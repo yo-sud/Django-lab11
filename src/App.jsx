@@ -17,6 +17,10 @@ function App() {
       return []
     }
   })
+  const [favNotification, setFavNotification] = useState({
+    message: '',
+    type: 'success'
+  })
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const featured = adaptMovie(movies[0])
@@ -31,6 +35,11 @@ function App() {
     setFavorites((prev) =>
       prev.includes(movieId) ? prev.filter((id) => id !== movieId) : [...prev, movieId]
     )
+    setFavNotification({
+      message: prev.includes(movieId) ? 'Quita de favoritas' : 'Película añadida a favoritas',
+      type: 'success'
+    })
+    setTimeout(() => setFavNotification({ message: '', type: 'success' }), 3000)
   }
 
   useEffect(() => {
@@ -60,6 +69,7 @@ function App() {
           onBuy={handleBuy}
           favorites={favorites}
           onToggleFavorite={toggleFavorite}
+          onFavoriteNotification={setFavNotification}
           query={query}
           onQueryChange={handleQueryChange}
           debouncedQuery={debouncedQuery}

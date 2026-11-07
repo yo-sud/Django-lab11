@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Button from './Button.jsx'
 
-function MovieCard({ movie, onBuy, isFavorite, onToggleFavorite }) {
+function MovieCard({ movie, onBuy, isFavorite, onToggleFavorite, onFavoriteNotification }) {
   const [selectedTime, setSelectedTime] = useState(null)
   const [confirmed, setConfirmed] = useState(false)
 
@@ -30,7 +30,10 @@ function MovieCard({ movie, onBuy, isFavorite, onToggleFavorite }) {
         <Button
           variant={isFavorite ? 'danger' : 'ghost'}
           className="movie-card__fav"
-          onClick={() => onToggleFavorite(movie.id)}
+          onClick={() => {
+            onToggleFavorite(movie.id)
+            onFavoriteNotification(movie.id)
+          }}
           aria-pressed={isFavorite}
         >
           {isFavorite ? '★ En favoritas' : '☆ Añadir a favoritas'}

@@ -1,60 +1,56 @@
+import { useCallback, useEffect, useState } from 'react'
+import { premieres as rawPremieres } from '../data/premieres.js'
+import { adaptPremiere } from '../utils/movieAdapter.js'
+
 /**
- * Hook personalizado usePremieres
- * Simula una petición asíncrona a un servicio de estrenos con tres estados:
- * cargando, con datos y con error. Sirve para demostrar la gestión de estados
- * en la interfaz y el uso de hooks personalizados que encapsulan lógica asíncrona.
+ * Simula la petición de los estrenos y expone sus tres estados.
  *
- * @param {number} delay - Tiempo en ms para simular la carga (default: 1000ms)
- * @param {number} errorChance - Probabilidad de error (default: 0.2)
- * @returns {object} Estado y datos del hook
+ * - `loading`: la petición está en curso.
+ * - `success`: llegaron datos ya adaptados al modelo de la aplicación.
+ * - `error`: la petición simulada falló y se puede reintentar.
+ *
+ * @param {{ delay?: number, shouldFail?: boolean }} options
+ * @returns {{ state: 'loading'|'success'|'error', data: object[], error: object|null, reload: Function }}
  */
-export const usePremieres = (delay = 1000, errorChance = 0.2) => {
+export const usePremieres = ({ delay = 1200, shouldFail = false } = {}) => {
   const [state, setState] = useState('loading')
   const [data, setData] = useState([])
   const [error, setError] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
+
+  const reload = useCallback(() => {
+    setReloadKey((key) => key + 1)
+  }, [])
 
   useEffect(() => {
+    let cancelled = false
+
     setState('loading')
     setData([])
     setError(null)
 
-    const timeout = setTimeout(() => {
-      // Simular probabilidad de error
-      if (Math.random() < errorChance) {
+    const timer = setTimeout(() => {
+      if (cancelled) return
+
+      if (shouldFail) {
         setError({
           code: 'NETWORK_ERROR',
-          message: 'No se pudieron cargar los estrenos. Inténtalo de nuevo.'
+          message: 'No se pudieron cargar los estrenos. Inténtalo de nuevo.',
         })
         setState('error')
-      } else {
-        // Datos simulados de estrenos
-        const simulatedData = [
-          {
-            id: 1,
-            title: 'Dune: Parte Dos',
-            image: '/posters/dune-parte-dos.jpg',
-            releaseDate: '2024-03-15'
-          },
-          {
-            id: 2,
-            title: 'Deadpool 3',
-            image: '/posters/deadpool-3.jpg',
-            releaseDate: '2024-07-26'
-          },
-          {
-            id: 3,
-            title: 'Inside Out 2',
-            image: '/posters/inside-out-2.jpg',
-            releaseDate: '2024-06-14'
-          }
-        ]
-        setData(simulatedData)
-        setState('success')
+        return
       }
+
+      const adapted = rawPremieres.map(adaptPremiere).filter(Boolean)
+      setData(adapted)
+      setState('success')
     }, delay)
 
-    return () => clearTimeout(timeout)
-  }, [])
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [delay, shouldFail, reloadKey])
 
-  return { state, data, error }
+  return { state, data, error, reload }
 }

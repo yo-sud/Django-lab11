@@ -1,28 +1,25 @@
+import { useEffect, useState } from 'react'
+
+const getWindowSize = () => ({
+  width: typeof window === 'undefined' ? 0 : window.innerWidth,
+  height: typeof window === 'undefined' ? 0 : window.innerHeight,
+})
+
 /**
- * Hook personalizado useWindowSize
- * Rastrean el tamaño de la ventana del navegador y devuelven el ancho actual.
- * Útil para adaptar el diseño responsivo sin necesidad de media queries
- * inline o gestionar manualmente el evento resize.
+ * Devuelve el tamaño actual de la ventana y se actualiza al redimensionar.
  *
- * @returns Objeto con ancho y alto actuales de la ventana
+ * Se usa en `App` para decidir cuántas tarjetas caben por fila y en
+ * `PremiereCarousel` para decidir cuántos estrenos se ven a la vez.
+ *
+ * @returns {{ width: number, height: number }}
  */
 export const useWindowSize = () => {
-  const [size, setSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  })
+  const [size, setSize] = useState(getWindowSize)
 
   useEffect(() => {
-    const handleResize = () => {
-      setSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      })
-    }
+    const handleResize = () => setSize(getWindowSize())
 
     window.addEventListener('resize', handleResize)
-
-    // Ejecutar una vez al iniciar para establecer el tamaño inicial
     handleResize()
 
     return () => window.removeEventListener('resize', handleResize)

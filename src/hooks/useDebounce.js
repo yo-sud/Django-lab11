@@ -1,11 +1,15 @@
+import { useEffect, useState } from 'react'
+
 /**
- * Hook personalizado useDebounce
- * Retarda el valor de un estado, útil para búsquedas que no deben
- * disparar el filtrado en cada tecla escrita.
+ * Retrasa la propagación de un valor.
  *
- * @param value Valor actual (texto del buscador)
- * @param delay Retardo en milisegundos (default: 300ms)
- * @returns Valor debounced (aplicado después del retardo)
+ * Se usa en `MovieSearch` para no escribir en el estado global de la
+ * cartelera en cada tecla. El temporizador se cancela si el valor cambia
+ * o si el componente se desmonta.
+ *
+ * @param {*} value Valor que se quiere retrasar.
+ * @param {number} delay Retardo en milisegundos.
+ * @returns {*} El último valor confirmado después del retardo.
  */
 export const useDebounce = (value, delay = 300) => {
   const [debouncedValue, setDebouncedValue] = useState(value)
@@ -14,6 +18,7 @@ export const useDebounce = (value, delay = 300) => {
     const timer = setTimeout(() => {
       setDebouncedValue(value)
     }, delay)
+
     return () => clearTimeout(timer)
   }, [value, delay])
 

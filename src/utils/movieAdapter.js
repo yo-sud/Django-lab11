@@ -1,44 +1,54 @@
 /**
- * Adaptador de datos de películas
- * Convierte el formato bruto de la cartelera al modelo interno de la aplicación.
- * Centraliza la transformación de datos para que los componentes no tengan que
- * preocuparse por las diferencias de estructura entre el servidor, el almacenamiento
- * local y la presentación visual.
+ * Patrón adaptador: traduce los datos crudos (API, almacenamiento o datos
+ * locales) al modelo único que consumen los componentes de la aplicación.
+ *
+ * Los componentes nunca leen `poster` o `schedules`: reciben siempre
+ * `image` y `schedule`, de modo que un cambio en el origen de datos solo
+ * obliga a tocar este archivo.
  */
 
+const PLACEHOLDER = '/posters/placeholder.svg'
+
+const asText = (value, fallback) => {
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  return fallback
+}
+
+const asNumber = (value) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+const asList = (value) => (Array.isArray(value) ? [...value] : [])
+
 export const adaptMovie = (rawMovie) => {
-  if (!rawMovie) return null
+  if (!rawMovie || typeof rawMovie !== 'object') return null
 
   return {
-    id: rawMovie.id,
-    title: rawMovie.title,
-    image: rawMovie.image || rawMovie.poster,
-    synopsis: rawMovie.synopsis,
-    classification: rawMovie.classification || rawMovie.rating,
-    rating: typeof rawMovie.rating === 'number' ? rawMovie.rating : 0,
-    schedule: rawMovie.schedule || [],
-    // Derivados del adaptador para evitar cálculos en los componentes
-    isFavorite: false,
-    watchTime: null,
+    id: rawMovie.id ?? rawMovie._id ?? rawMovie.slug ?? null,
+    title: asText(rawMovie.title ?? rawMovie.titulo, 'Película sin título'),
+    image: asText(rawMovie.image ?? rawMovie.poster ?? rawMovie.posterUrl, PLACEHOLDER),
+    synopsis: asText(rawMovie.synopsis ?? rawMovie.sinopsis ?? rawMovie.overview, ''),
+    classification: asText(
+      rawMovie.classification ?? rawMovie.clasificacion ?? rawMovie.rated,
+      'N/A'
+    ),
+    rating: asNumber(rawMovie.rating ?? rawMovie.vote_average ?? rawMovie.voteAverage),
+    schedule: asList(rawMovie.schedule ?? rawMovie.schedules ?? rawMovie.horarios),
+    releaseDate: rawMovie.releaseDate ?? rawMovie.release_date ?? null,
   }
 }
 
-/**
- * Adaptador para el modo premiere (datos simulados)
- * Añade metadatos específicos para la sección de estrenos.
- */
-export const adaptPremiere = (rawMovie) => ({
-  ...adaptMovie(rawMovie),
-  isNew: true,
-  badgeText: 'Nuevo',
-  badgeColor: 'var(--color-accent)',
-})
+export const adaptMovies = (rawMovies) =>
+  Array.isArray(rawMovies) ? rawMovies.map(adaptMovie).filter(Boolean) : []
 
-/**
- * Limpia datos redundantes que no necesita la vista
- */
-export const cleanMovieData = (movie) => ({
-  id: movie.id,
-  title: movie.title,
-  image: movie.image,
-})
+export const adaptPremiere = (rawPremiere) => {
+  const movie = adaptMovie(rawPremiere)
+  if (!movie) return null
+
+  return {
+    ...movie,
+    isNew: true,
+    badgeText: 'Estreno',
+  }
+}

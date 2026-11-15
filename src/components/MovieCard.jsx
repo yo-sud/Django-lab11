@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import Button from './Button.jsx'
 
-function MovieCard({ movie, onBuy, isFavorite, onToggleFavorite, onFavoriteNotification }) {
+/**
+ * Tarjeta de una película.
+ *
+ * No conoce el estado global de favoritas ni cómo se muestra el aviso:
+ * recibe `isFavorite` y notifica la intención con `onToggleFavorite(id)`.
+ */
+function MovieCard({ movie, onBuy, isFavorite, onToggleFavorite }) {
   const [selectedTime, setSelectedTime] = useState(null)
   const [confirmed, setConfirmed] = useState(false)
 
@@ -30,13 +36,10 @@ function MovieCard({ movie, onBuy, isFavorite, onToggleFavorite, onFavoriteNotif
         <Button
           variant={isFavorite ? 'danger' : 'ghost'}
           className="movie-card__fav"
-          onClick={() => {
-            onToggleFavorite(movie.id)
-            onFavoriteNotification(movie.id)
-          }}
+          onClick={() => onToggleFavorite(movie.id)}
           aria-pressed={isFavorite}
         >
-          {isFavorite ? '★ En favoritas' : '☆ Añadir a favoritas'}
+          {isFavorite ? '♥ En favoritas' : '☆ Añadir a favoritas'}
         </Button>
         <div className="movie-card__schedules">
           <strong>Elige un horario:</strong>

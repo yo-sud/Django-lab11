@@ -3,22 +3,32 @@ import Button from './Button.jsx'
 import MovieCard from './MovieCard.jsx'
 import MovieSearch from './MovieSearch.jsx'
 
-function MovieList({ movies, onBuy, favorites, onToggleFavorite, query, onQueryChange, debouncedQuery, cols }) {
+function MovieList({
+  movies,
+  onBuy,
+  favorites,
+  onToggleFavorite,
+  query,
+  onQueryChange,
+  columns = 3,
+}) {
   const [classification, setClassification] = useState('Todas')
 
   const classifications = ['Todas', ...new Set(movies.map((movie) => movie.classification))]
 
   const filtered = movies.filter((movie) => {
-    const matchesQuery = movie.title.toLowerCase().includes(debouncedQuery.toLowerCase())
+    const matchesQuery = movie.title.toLowerCase().includes(query.toLowerCase())
     const matchesClassification =
       classification === 'Todas' || movie.classification === classification
     return matchesQuery && matchesClassification
   })
 
+  const safeColumns = [1, 2, 3].includes(columns) ? columns : 3
+
   return (
-    <section className="movie-list" id="cartelera">
+    <section className="movie-list" id="cartelera" aria-labelledby="cartelera-title">
       <div className="container">
-        <h2 className="section-title">Cartelera</h2>
+        <h2 id="cartelera-title" className="section-title">Cartelera</h2>
 
         <div className="movie-list__controls">
           <MovieSearch
@@ -45,12 +55,16 @@ function MovieList({ movies, onBuy, favorites, onToggleFavorite, query, onQueryC
 
         {filtered.length === 0 ? (
           <p className="movie-list__empty">
-            {debouncedQuery
-              ? `No se encontraron películas que coincidan con «${debouncedQuery}».`
+            {query
+              ? `No se encontraron películas que coincidan con «${query}».`
               : 'No se encontraron películas con esos criterios.'}
           </p>
         ) : (
-          <ul className={`movie-list__grid movie-grid--${cols}`} role="list" aria-label="Películas en cartelera">
+          <ul
+            className={`movie-list__grid movie-grid--${safeColumns}`}
+            role="list"
+            aria-label="Películas en cartelera"
+          >
             {filtered.map((movie) => (
               <li key={movie.id} className="movie-list__item">
                 <MovieCard

@@ -1,83 +1,90 @@
-import { useEffect, useState } from 'react'
-import { useDebounce } from './hooks/useDebounce'
-import { useWindowSize } from './hooks/useWindowSize'
-import { usePremieres } from './hooks/usePremieres'
+import { useEffect, useMemo, useState } from 'react'
+import { useWindowSize } from './hooks/useWindowSize.js'
+import { adaptMovies } from './utils/movieAdapter.js'
 import Header from './components/Header.jsx'
 import Hero from './components/Hero.jsx'
 import MovieList from './components/MovieList.jsx'
+import PremieresSection from './components/PremieresSection.jsx'
+import FavoriteToast from './components/FavoriteToast.jsx'
 import Footer from './components/Footer.jsx'
-import { movies } from './data/movies.js'
+import { movies as rawMovies } from './data/movies.js'
 
 const FAVORITES_KEY = 'cine-plus:favorites'
 
+const loadFavorites = () => {
+  try {
+    const stored = localStorage.getItem(FAVORITES_KEY)
+    const parsed = stored ? JSON.parse(stored) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 function App() {
   const [tickets, setTickets] = useState(0)
-  const [favorites, setFavorites] = useState(() => {
-    try {
-      const stored = localStorage.getItem(FAVORITES_KEY)
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
-    }
-  })
-  const [favoritesCount, setFavoritesCount] = useState(favorites.length)
-  const [favNotification, setFavNotification] = useState({
-    message: '',
-    type: 'success'
-  })
+  const [favorites, setFavorites] = useState(loadFavorites)
+  const [notification, setNotification] = useState(null)
   const [query, setQuery] = useState('')
   const { width } = useWindowSize()
-  const cols = width > 1200 ? 3 : width > 768 ? 2 : 1
-  const featured = adaptMovie(movies[0])
 
-  const adaptedMovies = movies.map(adaptMovie)
+  const columns = width >= 1200 ? 3 : width >= 768 ? 2 : 1
+  const adaptedMovies = useMemo(() => adaptMovies(rawMovies), [])
+  const featured = adaptedMovies[0] ?? null
+  const favoritesCount = favorites.length
 
   const handleBuy = () => {
-    setTickets((prev) => prev + 1)
+    setTickets((previous) => previous + 1)
+  }
+
+  const handleQueryChange = (value) => {
+    console.log('[filtro]', value)
+    setQuery(value)
   }
 
   const toggleFavorite = (movieId) => {
-    setFavorites((prev) =>
-      prev.includes(movieId) ? prev.filter((id) => id !== movieId) : [...prev, movieId]
+    const isFavorite = favorites.includes(movieId)
+
+    setFavorites((previous) =>
+      previous.includes(movieId)
+        ? previous.filter((id) => id !== movieId)
+        : [...previous, movieId]
     )
-    setFavoritesCount(favorites.length + (prev.includes(movieId) ? -1 : 1))
-    setFavNotification({
-      message: prev.includes(movieId) ? 'Quita de favoritas' : 'Película añadida a favoritas',
-      type: 'success'
+    setNotification({
+      message: isFavorite ? 'Película quitada de favoritas' : 'Película añadida a favoritas',
+      type: isFavorite ? 'info' : 'success',
     })
-    setTimeout(() => setFavNotification({ message: '', type: 'success' }), 3000)
   }
 
   useEffect(() => {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites))
   }, [favorites])
 
-  const { state, data, error } = usePremieres()
+  useEffect(() => {
+    if (!notification) return undefined
 
-  const debouncedQuery = useDebounce(query, 300)
-
-  const handleQueryChange = (value) => {
-    console.log('[tecleo]', value)
-    setQuery(value)
-  }
+    const timer = setTimeout(() => setNotification(null), 2800)
+    return () => clearTimeout(timer)
+  }, [notification])
 
   return (
     <>
       <Header tickets={tickets} favoritesCount={favoritesCount} />
       <main>
         <Hero movie={featured} query={query} onQueryChange={handleQueryChange} />
+        <PremieresSection />
         <MovieList
-          movies={movies}
+          movies={adaptedMovies}
           onBuy={handleBuy}
           favorites={favorites}
           onToggleFavorite={toggleFavorite}
-          onFavoriteNotification={setFavNotification}
           query={query}
           onQueryChange={handleQueryChange}
-          debouncedQuery={debouncedQuery}
+          columns={columns}
         />
       </main>
       <Footer />
+      <FavoriteToast notification={notification} onClose={() => setNotification(null)} />
     </>
   )
 }

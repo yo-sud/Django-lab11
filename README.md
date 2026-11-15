@@ -257,3 +257,59 @@ cartelera-cine/
     └── styles/
         └── index.css           Tokens de diseño y estilos de todos los componentes; incluye variantes de Button y estilos de formulario
 ```
+
+---
+
+## Laboratorio 11 - Hooks del agente
+
+Esta seccion documenta la entrega de la semana 11 sobre el proyecto del Laboratorio 10. El detalle completo, con evidencia antes/despues y las preguntas de revision, esta en [`docs/ENTREGA_SEMANA_11.md`](docs/ENTREGA_SEMANA_11.md).
+
+### Hooks personalizados
+
+| Hook | Archivo | Para que sirve | Donde se usa |
+|------|---------|----------------|--------------|
+| `useDebounce` | `src/hooks/useDebounce.js` | Retrasa la propagacion de un valor y cancela el temporizador anterior | `MovieSearch`, montado en el Hero y en la lista |
+| `useWindowSize` | `src/hooks/useWindowSize.js` | Devuelve ancho/alto de la ventana y escucha `resize` con limpieza | `App` (columnas) y `PremiereCarousel` (estrenos por vista) |
+| `usePremieres` | `src/hooks/usePremieres.js` | Modela `loading`, `success` y `error` con datos adaptados y `reload()` | `PremieresSection` |
+
+### Arbol de componentes y datos por nivel
+
+```
+App  (tickets, favorites, notification, query, width)
+|- Header            <- tickets, favoritesCount
+|- Hero              <- movie, query, onQueryChange
+|  |- MovieSearch    <- value, onChange
+|  `- Button         <- "Limpiar filtro"
+|- PremieresSection  <- delay opcional; el hook vive aqui
+|  |- PremiereSkeleton  (loading)
+|  |- PremiereCarousel  <- premieres, useWindowSize
+|  `- Button            (simular error / reintentar)
+|- MovieList         <- movies, favorites, onToggleFavorite, onBuy, query, onQueryChange, columns
+|  |- MovieSearch    <- value, onChange
+|  `- MovieCard      <- movie, isFavorite, onToggleFavorite, onBuy
+|- Footer
+`- FavoriteToast     <- notification, onClose
+```
+
+### Por que el contador de favoritas vive en App y no en Header
+
+Las favoritas las cambian tarjetas que estan dentro de `MovieList`, y el numero lo muestra `Header`, que es hermano de `main`. El unico ancestro comun es `App`. Ademas el contador es derivable (`favorites.length`), asi que guardarlo aparte crea dos fuentes de verdad. `Header` recibe solo el numero; no conoce ids, titulos ni `localStorage`.
+
+### Pruebas
+
+```bash
+npm test        # Vitest + jsdom + Testing Library
+npm run build   # compilacion de produccion
+```
+
+- Baseline de la IA (`99ada9e`): **5 pasan / 17 fallan (22 pruebas)**, 9 archivos con fallos.
+- Version final: **26 pasan / 26 pruebas**, 10 archivos en verde.
+- Evidencia: `docs/evidencias/test-before.txt`, `docs/evidencias/test-after.txt`, `docs/evidencias/build-after.txt`.
+
+### Observaciones del uso de IA
+
+- La version original del asistente quedo congelada en el commit `99ada9e` y documentada en `docs/IA_BASELINE.md` antes de corregir. Los arreglos van en commits posteriores para poder comparar el diff.
+- Se rechazo el `usePremieres` con `Math.random()` porque hacia impredecible el estado de error; se reemplazo por `shouldFail` + `reload`.
+- Se rechazo el `favoritesCount` como estado paralelo porque se desincronizaba del arreglo real; ahora es `favorites.length`.
+- La IA sirvio para borradores y pruebas; cada salida se valido con `npm test`, `npm run build` y revision del diff.
+- Las props no son una frontera de seguridad: ordenan el flujo de datos, pero la autorizacion real vive en el servidor.
